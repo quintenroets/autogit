@@ -103,7 +103,6 @@ class GitCommander:
         
     def get(self, command, **kwargs):
         self.check(command)
-        print(kwargs)
         return Cli.get(self.command_start + command, **kwargs)
         
     def run(self, command, **kwargs):
