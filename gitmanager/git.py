@@ -96,6 +96,10 @@ class GitManager:
                 else:
                     print("cleaned")
                 print("")
+                
+    @staticmethod
+    def clone(name):
+        return Cli.run(f"git clone https://github.com/quintenroets/{name}")
         
 class GitCommander:
     def __init__(self, folder):
@@ -147,10 +151,16 @@ class Asker:
                 choice = k
         return choice
     
+def start():
+    if "clone" in sys.argv:
+        GitManager.clone(sys.argv[-1])
+    else:
+        GitManager.start(do_pull="pull" in sys.argv)
+    
 
 def main():
     with ErrorHandler():
-        GitManager.start(do_pull="pull" in sys.argv)
+        start()
 
 if __name__ == "__main__":
     main()
