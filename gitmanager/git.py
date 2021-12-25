@@ -28,6 +28,8 @@ class GitManager:
                     
         if not updated and not do_pull:
             answer = GitManager.ask_exit()
+            if answer == "drive":
+                Cli.run("drive")
             while not answer or (isinstance(answer, str) and answer == "pull"):
                 print("Pulling..")
                 Threads(GitManager.update, folders, do_pull=True).join()
