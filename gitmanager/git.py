@@ -42,16 +42,11 @@ class GitManager:
                     
     @staticmethod
     def get_git_folders():
-        folders = [
-            Path(folder)
+        return [
+            folder
             for root in roots
-            for folder in Cli.get(
-                f"find {root} -type d -execdir test -d" + " {}/.git \; -print -prune"
-                # very quick command to find folders that contain .git folder
-                ).split("\n")
-            if folder
+            for folder in root.find(lambda p: (p / ".git").exists())
             ]
-        return folders
 
     @staticmethod
     def update(folder, do_pull=False):
