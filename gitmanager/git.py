@@ -10,7 +10,7 @@ from libs.parser import Parser
 from libs.cli import Cli
 from libs.climessage import CliMessage, ask
 from libs.path import Path
-from libs.threading import Threads
+from libs.threading import Thread, Threads
 
 print_mutex = Lock()
 updated = False
@@ -69,9 +69,9 @@ class GitManager:
                     updated = True
                     
                     print(status, end="\n\n")
-                    pull = Thread(target=git.get, args=("pull",), kwargs={"check": False})
-                    pull.start()
+                    pull = Thread(git.get, "pull", check=False).start()
                     commit_message = ask("Commit and push?")
+                    pull.join()
                     
                     if commit_message == True:
                         commit_message = "Update " + str(datetime.now())
