@@ -69,12 +69,11 @@ class GitManager:
                     updated = True
                     
                     print(status, end="\n\n")
-                    asker = Asker("Commit and push?")
-                    pull = git.get("pull", check=False)
-                    asker.join()
+                    pull = Thread(target=git.get, args=("pull",), kwargs={"check": False})
+                    pull.start()
+                    commit_message = ask("Commit and push?")
                     
-                    commit_message = asker.response
-                    if commit_message in ["", True]:
+                    if commit_message == True:
                         commit_message = "Update " + str(datetime.now())
                     if commit_message:
                         commit = git.get(f"commit -m'{commit_message}'")
