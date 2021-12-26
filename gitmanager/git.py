@@ -100,7 +100,7 @@ class GitManager:
     @staticmethod
     def install(name):
         base_url = GitManager.get_base_url()
-        return Cli.run(f"pip install git+{base_url}/{name}")
+        return Cli.run(f"pip install --force-reinstall --no-deps git+{base_url}/{name}")
         
 class GitCommander:
     def __init__(self, folder):
