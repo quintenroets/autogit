@@ -95,7 +95,11 @@ class GitManager:
                 
     @staticmethod
     def clone(name):
-        return Cli.run(f"git clone https://github.com/quintenroets/{name}")
+        return Cli.run(
+            f"git clone https://github.com/quintenroets/{name}",
+            f"cd {name}",
+            "pip install -e ."
+            )
         
 class GitCommander:
     def __init__(self, folder):
