@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-NAME = "gitmanager"
+NAME = "autogit"
 
 def read(filename):
     try:
@@ -20,7 +20,7 @@ setup(
     install_requires=read("requirements.txt"),
     entry_points={
         "console_scripts": [
-            "gitmanager = gitmanager.git:main"
+            f"{NAME} = {NAME}.main:main"
             ]
         },
 )

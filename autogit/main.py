@@ -1,5 +1,7 @@
 import argparse
 
+from libs.errorhandler import ErrorHandler
+
 from .git import GitManager
 
 def main():
@@ -14,7 +16,8 @@ def main():
         "install": GitManager.install
         }
     action = action_mapper[args.action]
-    action(*args.names)
+    with ErrorHandler():
+        action(*args.names)
     
 if __name__ == "__main__":
     main()

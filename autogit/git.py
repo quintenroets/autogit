@@ -5,7 +5,6 @@ import threading
 from datetime import datetime
 from threading import Lock
 
-from libs.errorhandler import ErrorHandler
 from libs.parser import Parser
 from libs.cli import Cli
 from libs.climessage import CliMessage, ask
@@ -18,8 +17,14 @@ updated = False
 
 class GitManager:    
     @staticmethod
-    def refresh(do_pull=False):
-        folders = GitManager.get_git_folders()
+    def refresh(*roots, do_pull=False):
+        if not roots:
+            roots = [Path.scripts, Path.docs / "School"]
+        
+        folders = [
+            folder for root in roots for folder in root.find(lambda p: (p / ".git").exists())
+        ]
+        
         Threads(GitManager.update, folders, do_pull=do_pull).join()
         exit_message = "Everything clean.\nExit?"
                     
@@ -29,15 +34,6 @@ class GitManager:
                 print("Pulling..")
                 Threads(GitManager.update, folders, do_pull=True).join()
                 answer = ask(exit_message)
-            Cli.run("drive", check=False) # dont crash if not present
-                    
-    @staticmethod
-    def get_git_folders():
-        roots = [Path.scripts, Path.docs / "School"]
-        git_folders = [
-            folder for root in roots for folder in root.find(lambda p: (p / ".git").exists())
-        ]
-        return git_folders
 
     @staticmethod
     def update(folder, do_pull=False):
@@ -89,20 +85,22 @@ class GitManager:
         return f"https://github.com/{g.get_user().login}"
                 
     @staticmethod
-    def clone(name):
-        url = f"{GitManager.get_base_url()}/{name}"
-        folder = d
-        return Cli.run(
-            f"git clone {base_url}/{name} {Path.scripts / name}",
-            f"cd {name}",
-            "pip install -e ."
-            )
+    def clone(*names):
+        for name in names:
+            url = f"{GitManager.get_base_url()}/{name}"
+            folder = Path.scripts / name
+            Cli.run(
+                f"git clone {url} {Path.scripts / name}",
+                f"cd {name}",
+                "autogit install"
+                )
     
     @staticmethod
-    def install(name=None):
-        base_url = GitManager.get_base_url()
-        url = f"git+{base_url}/{name}" if name else ""
-        return Cli.run(f"pip install --force-reinstall --no-deps git+{base_url}/{name}")
+    def install(*names):
+        urls = [f"git+{GitManager.get_base_url()}/{name}" for name in names]
+        if not urls:
+            urls.append("-e .")
+        Cli.run(f"pip install --force-reinstall --no-deps {url}" for urls in urls)
         
 class GitCommander:
     def __init__(self, folder):
@@ -122,21 +120,3 @@ class GitCommander:
             if "@" not in url:
                 url = url.replace("https://", f"https://{os.environ['gittoken']}@")
                 self.run(f"config remote.origin.url {url}")
-
-    
-def start():
-    if "clone" in sys.argv:
-        GitManager.clone(sys.argv[-1])
-    if "install" in sys.argv:
-        arg = sys.argv[-1] if len(sys.argv) > 2 else "-e ."
-        GitManager.install(arg)
-    else:
-        GitManager.start(do_pull="pull" in sys.argv)
-    
-
-def main():
-    with ErrorHandler():
-        start()
-
-if __name__ == "__main__":
-    main()
