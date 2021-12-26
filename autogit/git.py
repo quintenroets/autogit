@@ -90,8 +90,8 @@ class GitManager:
             url = f"{GitManager.get_base_url()}/{name}"
             folder = Path.scripts / name
             Cli.run(
-                f"git clone {url} {Path.scripts / name}",
-                f"cd {name}",
+                f"git clone {url} {folder}",
+                f"cd {folder}",
                 "autogit install"
                 )
     
@@ -100,7 +100,7 @@ class GitManager:
         urls = [f"git+{GitManager.get_base_url()}/{name}" for name in names]
         if not urls:
             urls.append("-e .")
-        Cli.run(f"pip install --force-reinstall --no-deps {url}" for urls in urls)
+        Cli.run(f"pip install --force-reinstall --no-deps {url}" for url in urls)
         
 class GitCommander:
     def __init__(self, folder):
