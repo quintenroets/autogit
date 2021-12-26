@@ -1,4 +1,5 @@
-# Gitmanager
+# Autogit
 
-Automatically sync all local repositories with their remotes
-Run in CLI with command: gitmanager
+Automate common git workflows
+
+Run in Cli: "autogit"
