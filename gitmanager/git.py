@@ -8,46 +8,36 @@ from threading import Lock
 from libs.errorhandler import ErrorHandler
 from libs.parser import Parser
 from libs.cli import Cli
-from libs.climessage import CliMessage
+from libs.climessage import CliMessage, ask
 from libs.path import Path
 from libs.threading import Threads
-
-roots = [
-    Path.scripts,
-    Path.docs / "School"
-    ]
 
 print_mutex = Lock()
 updated = False
 
-class GitManager:
+
+class GitManager:    
     @staticmethod
     def start(do_pull=False):
         folders = GitManager.get_git_folders()
         Threads(GitManager.update, folders, do_pull=do_pull).join()
+        exit_message = "Everything clean.\nExit?"
                     
         if not updated and not do_pull:
-            answer = GitManager.ask_exit()
+            answer = ask(exit_message)
             while not answer or (isinstance(answer, str) and answer == "pull"):
                 print("Pulling..")
                 Threads(GitManager.update, folders, do_pull=True).join()
-                answer = GitManager.ask_exit()
+                answer = ask(exit_message)
             Cli.run("drive", check=False) # dont crash if not present
-                
-    @staticmethod
-    def ask_exit():
-        print("Everything clean.")
-        answer = Asker.get_answer("Exit?")
-        return answer
-        
                     
     @staticmethod
     def get_git_folders():
-        return [
-            folder
-            for root in roots
-            for folder in root.find(lambda p: (p / ".git").exists())
-            ]
+        roots = [Path.scripts, Path.docs / "School"]
+        git_folders = [
+            folder for root in roots for folder in root.find(lambda p: (p / ".git").exists())
+        ]
+        return git_folders
 
     @staticmethod
     def update(folder, do_pull=False):
@@ -94,12 +84,22 @@ class GitManager:
                 print("")
                 
     @staticmethod
+    def get_base_url():
+        return Cli.get("git config --global remote.origin.url")
+                
+    @staticmethod
     def clone(name):
+        base_url = GitManager.get_base_url()
         return Cli.run(
-            f"git clone https://github.com/quintenroets/{name}",
+            f"git clone {base_url}/{name}",
             f"cd {name}",
             "pip install -e ."
             )
+    
+    @staticmethod
+    def install(name):
+        base_url = GitManager.get_base_url()
+        return Cli.run(f"pip install git+{base_url}/{name}")
         
 class GitCommander:
     def __init__(self, folder):
@@ -119,41 +119,13 @@ class GitCommander:
             if "@" not in url:
                 url = url.replace("https://", f"https://{os.environ['gittoken']}@")
                 self.run(f"config remote.origin.url {url}")
-        
-class Asker:
-    def __init__(self, question):
-        self.question = question
-        self.response = ""
-        self.start_ask()
-        
-    def start_ask(self):
-        self.thread = threading.Thread(target=self.ask, args=(self.question, ))
-        self.thread.start()
-        
-    def ask(self, question):
-        self.response = Asker.get_answer(question)
-        
-    def join(self):
-        self.thread.join()
 
-    @staticmethod
-    def get_answer(question):
-        choice_mappers = {
-            True: ["", "yes", "y"],
-            False: ["no", "n"]
-            }
-        question += " [Y/n] "
-
-        print(question, end="")
-        choice = input().lower().strip()
-        for k, v in choice_mappers.items():
-            if choice in v:
-                choice = k
-        return choice
     
 def start():
     if "clone" in sys.argv:
         GitManager.clone(sys.argv[-1])
+    if "install" in sys.argv:
+        GitManager.install(sys.argv[-1])
     else:
         GitManager.start(do_pull="pull" in sys.argv)
     
