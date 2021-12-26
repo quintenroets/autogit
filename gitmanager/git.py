@@ -18,7 +18,7 @@ updated = False
 
 class GitManager:    
     @staticmethod
-    def start(do_pull=False):
+    def refresh(do_pull=False):
         folders = GitManager.get_git_folders()
         Threads(GitManager.update, folders, do_pull=do_pull).join()
         exit_message = "Everything clean.\nExit?"
@@ -90,16 +90,18 @@ class GitManager:
                 
     @staticmethod
     def clone(name):
-        base_url = GitManager.get_base_url()
+        url = f"{GitManager.get_base_url()}/{name}"
+        folder = d
         return Cli.run(
-            f"git clone {base_url}/{name}",
+            f"git clone {base_url}/{name} {Path.scripts / name}",
             f"cd {name}",
             "pip install -e ."
             )
     
     @staticmethod
-    def install(name):
+    def install(name=None):
         base_url = GitManager.get_base_url()
+        url = f"git+{base_url}/{name}" if name else ""
         return Cli.run(f"pip install --force-reinstall --no-deps git+{base_url}/{name}")
         
 class GitCommander:
@@ -126,7 +128,8 @@ def start():
     if "clone" in sys.argv:
         GitManager.clone(sys.argv[-1])
     if "install" in sys.argv:
-        GitManager.install(sys.argv[-1])
+        arg = sys.argv[-1] if len(sys.argv) > 2 else "-e ."
+        GitManager.install(arg)
     else:
         GitManager.start(do_pull="pull" in sys.argv)
     
