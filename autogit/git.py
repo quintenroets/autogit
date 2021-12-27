@@ -8,6 +8,8 @@ from threading import Lock
 from libs.parser import Parser
 from libs.cli import Cli
 from libs.climessage import CliMessage, ask
+from libs.clispinner import CliSpinner
+from libs.gui import Gui
 from libs.path import Path
 from libs.threading import Thread, Threads
 
@@ -79,22 +81,41 @@ class GitManager:
                 print("")
                 
     @staticmethod
-    def get_base_url():
+    def get_git_manager():
         from github import Github # long import time
-        token = os.environ["gittoken"]
-        g = Github(token)
-        return f"https://{token}@github.com/{g.get_user().login}"
+        return Github(os.environ["gittoken"])
+                
+    @staticmethod
+    def get_base_url():
+        g = GitManager.get_git_manager()
+        return f"https://{os.environ['gittoken']}@github.com/{g.get_user().login}"
+    
+    @staticmethod
+    def get_all_repos():
+        g = GitManager.get_git_manager()
+        user = g.get_user()
+        return [
+            repo.name for repo in user.get_repos() 
+            if repo.get_collaborators().totalCount == 1
+            and repo.get_collaborators()[0].login == user.login 
+            and not repo.archived
+        ]
+        
                 
     @staticmethod
     def clone(*names):
+        if not names:
+            with CliSpinner("Fetching repo list"):
+                repos = GitManager.get_all_repos()
+            name = Gui.ask("Choose repo", repos)
+            if name:
+                names = [name]
+        
         for name in names:
             url = f"{GitManager.get_base_url()}/{name}"
             folder = Path.scripts / name
-            Cli.run(
-                f"git clone {url} {folder}",
-                #f"cd {folder}",
-                #"autogit install"
-                )
+            if not folder.exists():
+                Cli.run(f"git clone {url} {folder}")
     
     @staticmethod
     def install(*names):
