@@ -81,8 +81,9 @@ class GitManager:
     @staticmethod
     def get_base_url():
         from github import Github # long import time
-        g = Github(os.environ["gittoken"])
-        return f"https://github.com/{g.get_user().login}"
+        token = os.environ["gittoken"]
+        g = Github(token)
+        return f"https://{token}@github.com/{g.get_user().login}"
                 
     @staticmethod
     def clone(*names):
