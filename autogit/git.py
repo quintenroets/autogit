@@ -91,8 +91,8 @@ class GitManager:
             folder = Path.scripts / name
             Cli.run(
                 f"git clone {url} {folder}",
-                f"cd {folder}",
-                "autogit install"
+                #f"cd {folder}",
+                #"autogit install"
                 )
     
     @staticmethod
