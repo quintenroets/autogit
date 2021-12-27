@@ -3,6 +3,7 @@ import subprocess
 import sys
 import threading
 from datetime import datetime
+import shutil
 from threading import Lock
 
 from libs.parser import Parser
@@ -123,6 +124,10 @@ class GitManager:
         if not urls:
             urls.append("-e .")
         Cli.run(f"pip install --force-reinstall --no-deps {url}" for url in urls)
+        for name in names:
+            folder = Path.scripts / name
+            if folder.exists():
+                shutil.rmtree(folder)
         
 class GitCommander:
     def __init__(self, folder):
