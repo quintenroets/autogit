@@ -67,6 +67,10 @@ class GitManager:
                     global updated
                     updated = True
                     
+                    status_verbose = git.get("status -v")
+                    if status_verbose.count("\n") < 40:
+                        status = status_verbose
+                    
                     print(status, end="\n\n")
                     pull = Thread(git.get, "pull", check=False).start()
                     commit_message = ask("Commit and push?")
