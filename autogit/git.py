@@ -42,8 +42,7 @@ class GitManager:
     def update(folder, do_pull=False):
         git = GitCommander(folder)
         changes = git.get("diff")
-        status = git.get("status")
-        clean = not changes and "nothing to commit, working tree clean" in status
+        status = git.get("status --porcelain")
 
         title_message = "\n".join(["", folder.name.capitalize(), "=" * 80])
         
@@ -54,24 +53,22 @@ class GitManager:
                     print(title_message)
                     print(pull)
 
-        elif not clean:
+        if changes or status:
             with print_mutex:
                 print(title_message)
                 with CliMessage("Adding changes.."):
                     add = git.get("add .")
-                    status = git.get("status")
-                    status = Parser.after(status, "to unstage)\n")
-                    clean = "nothing to commit, working tree clean" in status
+                    status = git.get("status --porcelain")
                     
-                if not clean:
+                if changes or status:
                     global updated
                     updated = True
                     
-                    status_verbose = git.get("status -v")
-                    if status_verbose.count("\n") < 40:
-                        status = status_verbose
+                    mapper = {"M": "*", "D": "-", "C": "+"}
+                    status_lines = [mapper[line[0]] + line[1:] for line in status.split("\n")]
+                    status_print = "\n".join(status_lines + [""])
                     
-                    print(status, end="\n\n")
+                    print(status_print)
                     pull = Thread(git.get, "pull", check=False).start()
                     commit_message = ask("Commit and push?")
                     
