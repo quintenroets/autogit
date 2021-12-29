@@ -67,8 +67,8 @@ class GitManager:
                     mapper = {"M": "*", "D": "-", "C": "+"}
                     status_lines = [mapper[line[0]] + line[1:] for line in status.split("\n")]
                     status_print = "\n".join(status_lines + [""])
-                    
                     print(status_print)
+                    
                     pull = Thread(git.get, "pull", check=False).start()
                     commit_message = ask("Commit and push?")
                     
