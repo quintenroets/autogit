@@ -64,7 +64,7 @@ class GitManager:
                     global updated
                     updated = True
                     
-                    mapper = {"M": "*", "D": "-", "C": "+"}
+                    mapper = {"M": "*", "D": "-", "A": "+"}
                     status_lines = [mapper[line[0]] + line[1:] for line in status.split("\n")]
                     status_print = "\n".join(status_lines + [""])
                     print(status_print)
