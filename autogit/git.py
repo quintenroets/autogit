@@ -70,11 +70,11 @@ class GitManager:
                     print(status, end="\n\n")
                     pull = Thread(git.get, "pull", check=False).start()
                     commit_message = ask("Commit and push?")
-                    pull.join()
                     
                     if commit_message == True:
                         commit_message = "Update " + str(datetime.now())
                     if commit_message:
+                        pull.join()
                         commit = git.get(f"commit -m'{commit_message}'")
                         push = git.run("push")
                 else:
