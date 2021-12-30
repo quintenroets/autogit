@@ -15,10 +15,11 @@ from libs.path import Path
 from libs.threading import Thread, Threads
 
 print_mutex = Lock()
-updated = False
 
 
-class GitManager:    
+class GitManager:
+    updated = False
+    
     @staticmethod
     def refresh(*roots, do_pull=False):
         if not roots:
@@ -61,8 +62,7 @@ class GitManager:
                     status = git.get("status --porcelain")
                     
                 if changes or status:
-                    global updated
-                    updated = True
+                    GitManager.updated = True
                     
                     mapper = {"M": "*", "D": "-", "A": "+"}
                     status_lines = [mapper[line[0]] + line[1:] for line in status.split("\n")]
