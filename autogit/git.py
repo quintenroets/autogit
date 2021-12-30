@@ -29,7 +29,9 @@ class GitManager:
         ]
         
         Threads(GitManager.update, folders, do_pull=do_pull).join()
-        exit_message = "Everything clean.\nExit?"
+        exit_message = "Autogit: everything clean."
+        print(exit_message)
+        return
                     
         if not updated and not do_pull:
             answer = ask(exit_message)
