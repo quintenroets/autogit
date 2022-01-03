@@ -64,8 +64,9 @@ class GitManager:
                 if changes or status:
                     GitManager.updated = True
                     
-                    mapper = {"M": "*", "D": "-", "A": "+"}
-                    status_lines = [mapper[line[0]] + line[1:] for line in status.split("\n") if line]
+                    mapper = {"M": "*", "D": "-", "A": "+", "R": "->", "C": "->>"}
+
+                    status_lines = [mapper.get(line[0], "") + line[1:] for line in status.split("\n") if line]
                     status_print = "\n".join(status_lines + [""])
                     print(status_print)
                     
