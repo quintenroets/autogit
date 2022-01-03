@@ -4,7 +4,7 @@ import sys
 import threading
 from datetime import datetime
 import shutil
-from path import Path
+from plib import Path
 from threading import Lock
 
 from libs.parser import Parser
