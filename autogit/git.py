@@ -4,6 +4,7 @@ import sys
 import threading
 from datetime import datetime
 import shutil
+from spathlib import Path
 from threading import Lock
 
 from libs.parser import Parser
@@ -11,7 +12,6 @@ from libs.cli import Cli
 from libs.climessage import CliMessage, ask
 from libs.clispinner import CliSpinner
 from libs.gui import Gui
-from libs.path import Path
 from libs.threading import Thread, Threads
 
 print_mutex = Lock()
