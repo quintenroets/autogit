@@ -4,7 +4,7 @@ import sys
 import threading
 from datetime import datetime
 import shutil
-from spathlib import Path
+from path import Path
 from threading import Lock
 
 from libs.parser import Parser
@@ -64,7 +64,7 @@ class GitManager:
                 if changes or status:
                     GitManager.updated = True
                     
-                    mapper = {"M": "*", "D": "-", "A": "+", "R": "->", "C": "->>"}
+                    mapper = {"M": "*", "D": "-", "A": "+", "R": "*", "C": "*"}
 
                     status_lines = [mapper.get(line[0], "") + line[1:] for line in status.split("\n") if line]
                     status_print = "\n".join(status_lines + [""])
