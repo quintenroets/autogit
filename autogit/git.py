@@ -78,9 +78,15 @@ class GitManager:
                     if commit_message:
                         pull.join()
                         commit = git.get(f"commit -m'{commit_message}'")
-                        push = git.run("push")
+                        git.run("push")
                 else:
                     print("cleaned")
+                print("")
+        
+        # commited before but the push has failed
+        elif "ahead" in git.get("status --porcelain -b | grep '##'"):
+            if ask("Push?"):
+                git.run("push")
                 print("")
                 
     @staticmethod
