@@ -44,6 +44,9 @@ class GitManager:
         git = GitCommander(folder)
         changes = git.get("diff")
         status = git.get("status --porcelain")
+        
+        # commited before but the push has failed
+        comitted = not changes and not status and "ahead" in git.get("status --porcelain -b | grep '##'")
 
         title_message = "\n".join(["", folder.name.capitalize(), "=" * 80])
         
@@ -54,12 +57,13 @@ class GitManager:
                     print(title_message)
                     print(pull)
 
-        if changes or status:
+        if changes or status or comitted:
             with print_mutex:
                 print(title_message)
-                with CliMessage("Adding changes.."):
-                    add = git.get("add .")
-                    status = git.get("status --porcelain")
+                if not comitted:
+                    with CliMessage("Adding changes.."):
+                        add = git.get("add .")
+                        status = git.get("status --porcelain")
                     
                 if changes or status:
                     GitManager.updated = True
@@ -79,14 +83,11 @@ class GitManager:
                         pull.join()
                         commit = git.get(f"commit -m'{commit_message}'")
                         git.run("push")
+                elif comitted:
+                    if ask("Retry push?"):
+                        git.run("push")
                 else:
                     print("cleaned")
-                print("")
-        
-        # commited before but the push has failed
-        elif "ahead" in git.get("status --porcelain -b | grep '##'"):
-            if ask("Retry push?"):
-                git.run("push")
                 print("")
                 
     @staticmethod
