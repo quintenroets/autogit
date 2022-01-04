@@ -85,7 +85,7 @@ class GitManager:
         
         # commited before but the push has failed
         elif "ahead" in git.get("status --porcelain -b | grep '##'"):
-            if ask("Push?"):
+            if ask(" earlier push failed: Push?"):
                 git.run("push")
                 print("")
                 
