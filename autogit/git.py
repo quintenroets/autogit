@@ -31,7 +31,7 @@ class GitManager:
         
         Threads(GitManager.update, folders, do_pull=do_pull).join()
         
-        if do_pull and not updated:
+        if do_pull and not GitManager.updated:
             print("Everything clean.")
             
 
