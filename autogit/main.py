@@ -14,8 +14,11 @@ def main():
     action_mapper = {
         "refresh": GitManager.refresh,
         "clone": GitManager.clone,
-        "install": GitManager.install
+        "install": GitManager.install,
+        "pull": lambda: GitManager.refresh(do_pull=True)
         }
+    if args.action not in action_mapper:
+        raise Exception(f"{args.action} not defined")
     action = action_mapper[args.action]
     with ErrorHandler():
         action(*args.names)
