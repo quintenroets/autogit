@@ -30,14 +30,10 @@ class GitManager:
         ]
         
         Threads(GitManager.update, folders, do_pull=do_pull).join()
-        return
-                    
-        if not updated and not do_pull:
-            answer = ask(exit_message)
-            while not answer or (isinstance(answer, str) and answer == "pull"):
-                print("Pulling..")
-                Threads(GitManager.update, folders, do_pull=True).join()
-                answer = ask(exit_message)
+        
+        if do_pull and not updated:
+            print("Everything clean.")
+            
 
     @staticmethod
     def update(folder, do_pull=False):
@@ -56,6 +52,7 @@ class GitManager:
                 with print_mutex:
                     print(title_message)
                     print(pull)
+                    GitManager.updated = True
 
         if changes or status or comitted:
             with print_mutex:
