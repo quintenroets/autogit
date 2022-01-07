@@ -74,6 +74,10 @@ class GitManager:
                     pull = Thread(git.get, "pull", check=False).start()
                     commit_message = ask("Commit and push?")
                     
+                    while commit_message == "show":
+                        git.run("status -v")
+                        commit_message = ask("Commit and push?")
+                    
                     if commit_message == True:
                         commit_message = "Update " + str(datetime.now())
                     if commit_message:
@@ -86,6 +90,7 @@ class GitManager:
                 else:
                     print("cleaned")
                 print("")
+                Cli.run("clear")
                 
     @staticmethod
     def get_git_manager():
