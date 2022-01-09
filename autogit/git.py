@@ -26,7 +26,7 @@ class GitManager:
             return (folder / ".git").exists()
         
         folders = [
-            folder for root in roots for folder in root.find(is_git)
+            folder for root in roots for folder in root.find(is_git, follow_symlinks=False)
         ]
         Threads(GitManager.update, folders, do_pull=do_pull).join()
         
