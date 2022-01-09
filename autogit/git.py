@@ -1,9 +1,6 @@
 import os
-import subprocess
-import sys
 import threading
 from datetime import datetime
-import shutil
 from plib import Path
 from threading import Lock
 
@@ -23,13 +20,13 @@ class GitManager:
     @staticmethod
     def refresh(*roots, do_pull=False):
         if not roots:
-            roots = [Path.scripts, Path.docs / "School"]
+            roots = [Path.scripts] 
         
         def is_git(folder):
             return (folder / ".git").exists()
         
         folders = [
-            folder for root in roots for folder in root.find(is_git, follow_symlinks=False)
+            folder for root in roots for folder in root.find(is_git)
         ]
         Threads(GitManager.update, folders, do_pull=do_pull).join()
         
@@ -140,7 +137,7 @@ class GitManager:
         for name in names:
             folder = Path.scripts / name
             if folder.exists():
-                shutil.rmtree(folder)
+                folder.rmtree()
         
 class GitCommander:
     def __init__(self, folder):
