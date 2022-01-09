@@ -25,10 +25,12 @@ class GitManager:
         if not roots:
             roots = [Path.scripts, Path.docs / "School"]
         
-        folders = [
-            folder for root in roots for folder in root.find(lambda p: (p / ".git").exists())
-        ]
+        def is_git(folder):
+            return (folder / ".git").exists()
         
+        folders = [
+            folder for root in roots for folder in root.find(is_git, follow_symlinks=False)
+        ]
         Threads(GitManager.update, folders, do_pull=do_pull).join()
         
         if do_pull and not GitManager.updated:
