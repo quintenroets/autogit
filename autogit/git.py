@@ -123,7 +123,7 @@ class GitManager:
             url = f"{GitManager.get_base_url()}/{name}"
             folder = Path.scripts / name
             if not folder.exists():
-                cli.run(f'git clone "{url}" "{folder}"')
+                cli.run(('git clone', url, folder))
     
     @staticmethod
     def install(*names):
@@ -131,22 +131,22 @@ class GitManager:
         if not urls:
             urls.append("-e .")
         for url in urls:
-            cli.run(f'pip install --force-reinstall --no-deps {url}')
+            cli.run(('pip install --force-reinstall --no-deps', url))
         for name in names:
             folder = Path.scripts / name
             folder.rmtree()
         
 class GitCommander:
     def __init__(self, folder):
-        self.command_start = f'git -C "{folder}" '
+        self.command_start = ('git', '-C', folder)
         
     def get(self, command, **kwargs):
         self.check(command)
-        return cli.get(self.command_start + command, **kwargs)
+        return cli.get((*self.command_start, command), **kwargs)
         
     def run(self, command, **kwargs):
         self.check(command)
-        return cli.run(self.command_start + command, **kwargs)
+        return cli.run((*self.command_start, command), **kwargs)
     
     def check(self, command):
         if command in ["pull", "push"]:
