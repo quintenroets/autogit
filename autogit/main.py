@@ -1,7 +1,5 @@
 import argparse
-
-from libs.cli import Cli
-from libs.errorhandler import ErrorHandler
+import cli
 
 from .git import GitManager
 
@@ -20,7 +18,7 @@ def main():
     if args.action not in action_mapper:
         raise Exception(f"{args.action} not defined")
     action = action_mapper[args.action]
-    with ErrorHandler():
+    with cli.errorhandler():
         action(*args.names)
     
 if __name__ == "__main__":

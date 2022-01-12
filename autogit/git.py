@@ -1,17 +1,17 @@
+import cli
 import os
+import sh
 import threading
 from datetime import datetime
 from plib import Path
-from threading import Lock
 
 from libs.parser import Parser
-from libs.cli import Cli
 from libs.climessage import CliMessage, ask
 from libs.clispinner import CliSpinner
 from libs.gui import Gui
 from libs.threading import Thread, Threads
 
-print_mutex = Lock()
+print_mutex = threading.Lock()
 
 
 class GitManager:
@@ -89,7 +89,7 @@ class GitManager:
                 else:
                     print("cleaned")
                 print("")
-                Cli.run("clear")
+                sh.clear()
                 
     @staticmethod
     def get_git_manager():
@@ -126,18 +126,18 @@ class GitManager:
             url = f"{GitManager.get_base_url()}/{name}"
             folder = Path.scripts / name
             if not folder.exists():
-                Cli.run(f"git clone {url} {folder}")
+                sh.git('clone', url, folder)
     
     @staticmethod
     def install(*names):
         urls = [f"git+{GitManager.get_base_url()}/{name}" for name in names]
         if not urls:
             urls.append("-e .")
-        Cli.run(f"pip install --force-reinstall --no-deps {url}" for url in urls)
+        for url in urls:
+            sh.pip('install', url, force_reinstall=True, no_deps=True)
         for name in names:
             folder = Path.scripts / name
-            if folder.exists():
-                folder.rmtree()
+            folder.rmtree()
         
 class GitCommander:
     def __init__(self, folder):
@@ -145,11 +145,11 @@ class GitCommander:
         
     def get(self, command, **kwargs):
         self.check(command)
-        return Cli.get(self.command_start + command, **kwargs)
+        return cli.get(self.command_start + command, **kwargs)
         
     def run(self, command, **kwargs):
         self.check(command)
-        return Cli.run(self.command_start + command, **kwargs)
+        return cli.run(self.command_start + command, **kwargs)
     
     def check(self, command):
         if command in ["pull", "push"]:
