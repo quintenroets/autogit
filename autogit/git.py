@@ -1,13 +1,10 @@
 import cli
 import os
-import sh
 import threading
 from datetime import datetime
 from plib import Path
 
 from libs.parser import Parser
-from libs.climessage import CliMessage, ask
-from libs.clispinner import CliSpinner
 from libs.gui import Gui
 from libs.threading import Thread, Threads
 
@@ -57,7 +54,7 @@ class GitManager:
             with print_mutex:
                 print(title_message)
                 if not comitted:
-                    with CliMessage("Adding changes.."):
+                    with cli.message("Adding changes.."):
                         add = git.get("add .")
                         status = git.get("status --porcelain")
                     
@@ -71,11 +68,11 @@ class GitManager:
                     print(status_print)
                     
                     pull = Thread(git.get, "pull", check=False).start()
-                    commit_message = ask("Commit and push?")
+                    commit_message = cli.ask("Commit and push?")
                     
                     while commit_message == "show":
                         git.run("status -v")
-                        commit_message = ask("Commit and push?")
+                        commit_message = cli.ask("Commit and push?")
                     
                     if commit_message == True:
                         commit_message = "Update " + str(datetime.now())
@@ -84,12 +81,12 @@ class GitManager:
                         commit = git.get(f"commit -m'{commit_message}'")
                         git.run("push")
                 elif comitted:
-                    if ask("Retry push?"):
+                    if cli.ask("Retry push?"):
                         git.run("push")
                 else:
                     print("cleaned")
                 print("")
-                sh.clear()
+                cli.run("clear")
                 
     @staticmethod
     def get_git_manager():
@@ -116,7 +113,7 @@ class GitManager:
     @staticmethod
     def clone(*names):
         if not names:
-            with CliSpinner("Fetching repo list"):
+            with cli.spinner("Fetching repo list"):
                 repos = GitManager.get_all_repos()
             name = Gui.ask("Choose repo", repos)
             if name:
@@ -126,7 +123,7 @@ class GitManager:
             url = f"{GitManager.get_base_url()}/{name}"
             folder = Path.scripts / name
             if not folder.exists():
-                sh.git('clone', url, folder)
+                cli.run(f'git clone "{url}" "{folder}"')
     
     @staticmethod
     def install(*names):
@@ -134,7 +131,7 @@ class GitManager:
         if not urls:
             urls.append("-e .")
         for url in urls:
-            sh.pip('install', url, force_reinstall=True, no_deps=True)
+            cli.run(f'pip install --force-reinstall --no-deps {url}')
         for name in names:
             folder = Path.scripts / name
             folder.rmtree()
