@@ -1,11 +1,11 @@
 import cli
+import gui
 import os
 import threading
 from datetime import datetime
 from plib import Path
 
 from libs.parser import Parser
-from libs.gui import Gui
 from libs.threading import Thread, Threads
 
 print_mutex = threading.Lock()
@@ -115,7 +115,7 @@ class GitManager:
         if not names:
             with cli.spinner("Fetching repo list"):
                 repos = GitManager.get_all_repos()
-            name = Gui.ask("Choose repo", repos)
+            name = gui.ask("Choose repo", repos)
             if name:
                 names = [name]
         
@@ -123,7 +123,7 @@ class GitManager:
             url = f"{GitManager.get_base_url()}/{name}"
             folder = Path.scripts / name
             if not folder.exists():
-                cli.run(('git clone', url, folder))
+                cli.run('git clone', url, folder)
     
     @staticmethod
     def install(*names):
@@ -131,7 +131,7 @@ class GitManager:
         if not urls:
             urls.append("-e .")
         for url in urls:
-            cli.run(('pip install --force-reinstall --no-deps', url))
+            cli.run('pip install --force-reinstall --no-deps', url)
         for name in names:
             folder = Path.scripts / name
             folder.rmtree()
@@ -142,11 +142,11 @@ class GitCommander:
         
     def get(self, command, **kwargs):
         self.check(command)
-        return cli.get((*self.command_start, command), **kwargs)
+        return cli.get(*self.command_start, command, **kwargs)
         
     def run(self, command, **kwargs):
         self.check(command)
-        return cli.run((*self.command_start, command), **kwargs)
+        return cli.run(*self.command_start, command, **kwargs)
     
     def check(self, command):
         if command in ["pull", "push"]:
