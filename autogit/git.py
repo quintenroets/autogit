@@ -1,6 +1,7 @@
 import cli
 import gui
 import os
+import shlex
 import threading
 from datetime import datetime
 from plib import Path
@@ -38,7 +39,7 @@ class GitManager:
         status = git.get("status --porcelain")
         
         # commited before but the push has failed
-        comitted = not changes and not status and "ahead" in git.get("status --porcelain -b | grep '##'")
+        comitted = not changes and not status and any(['ahead' in line and '##' in line for line in git.get('status --porcelain -b')])
 
         title_message = "\n".join(["", folder.name.capitalize(), "=" * 80])
         
@@ -140,13 +141,12 @@ class GitCommander:
     def __init__(self, folder):
         self.command_start = ('git', '-C', folder)
         
-    def get(self, command, **kwargs):
-        self.check(command)
-        return cli.get(*self.command_start, command, **kwargs)
-        
     def run(self, command, **kwargs):
         self.check(command)
-        return cli.run(*self.command_start, command, **kwargs)
+        return cli.run(*self.command_start, *shlex.split(command), **kwargs)
+        
+    def get(self, command, **kwargs):
+        return self.run(command, **kwargs, capture_output=True).stdout.strip()
     
     def check(self, command):
         if command in ["pull", "push"]:
