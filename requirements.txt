@@ -1,3 +1,5 @@
+cli @ git+https://github.com/quintenroets/cli
+gui @ git+https://github.com/quintenroets/gui
 libs @ git+https://github.com/quintenroets/libs
 superpathlib @ git+https://github.com/quintenroets/superpathlib
 PyGithub
