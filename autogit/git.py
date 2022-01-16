@@ -58,7 +58,7 @@ class GitManager:
             with print_mutex:
                 console.rule(title)
                 if not comitted:
-                    with cli.message('Adding changes..'):
+                    with cli.status('Adding changes..'):
                         add = git.get('add .')
                         status = git.get('status --porcelain')
                     
@@ -68,22 +68,25 @@ class GitManager:
                     mapper = {'M': '*', 'D': '-', 'A': '+', 'R': '*', 'C': '*'}
 
                     status_lines = [mapper.get(line[0], '') + line[1:] for line in status.split('\n') if line]
-                    status_print = '\n'.join(status_lines + [''])
-                    print(status_print)
+                    if status_lines:
+                        status_print = '\n'.join(status_lines + [''])
+                        print(status_print)
                     
-                    pull = Thread(git.get, 'pull', check=False).start()
-                    commit_message = cli.ask('Commit and push?')
-                    
-                    while commit_message == 'show':
-                        git.run('status -v')
+                        pull = Thread(git.get, 'pull', check=False).start()
                         commit_message = cli.ask('Commit and push?')
                     
-                    if commit_message == True:
-                        commit_message = 'Update ' + str(datetime.now())
-                    if commit_message:
-                        pull.join()
-                        commit = git.get(f'commit -m"{commit_message}"')
-                        git.run('push')
+                        while commit_message == 'show':
+                            git.run('status -v')
+                            commit_message = cli.ask('Commit and push?')
+                    
+                        if commit_message == True:
+                            commit_message = 'Update ' + str(datetime.now())
+                        if commit_message:
+                            pull.join()
+                            commit = git.get(f'commit -m"{commit_message}"')
+                            git.run('push')
+                    else:
+                        cli.console.print('cleaned')
                 elif comitted:
                     if cli.ask('Retry push?'):
                         git.run('push')
