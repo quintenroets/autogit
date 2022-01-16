@@ -3,6 +3,8 @@ import gui
 import os
 import shlex
 import threading
+
+from rich.console import Console
 from datetime import datetime
 from plib import Path
 
@@ -10,6 +12,7 @@ from libs.parser import Parser
 from libs.threading import Thread, Threads
 
 print_mutex = threading.Lock()
+console = Console()
 
 
 class GitManager:
@@ -41,19 +44,19 @@ class GitManager:
         # commited before but the push has failed
         comitted = not changes and not status and any(['ahead' in line and '##' in line for line in git.get('status --porcelain -b')])
 
-        title_message = '\n'.join(['', folder.name.capitalize(), '=' * 80])
+        title = folder.name.capitalize()
         
         if do_pull:
             pull = git.get('pull')
             if 'Already up to date.' not in pull:
                 with print_mutex:
-                    print(title_message)
+                    console.rule(title)
                     print(pull)
                     GitManager.updated = True
 
         if changes or status or comitted:
             with print_mutex:
-                print(title_message)
+                console.rule(title)
                 if not comitted:
                     with cli.message('Adding changes..'):
                         add = git.get('add .')
