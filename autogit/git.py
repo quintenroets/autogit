@@ -142,7 +142,8 @@ class GitManager:
         for name in names:
             folder = Path.scripts / name
             folder.rmtree()
-        
+
+
 class GitCommander:
     def __init__(self, folder):
         self.command_start = ('git', '-C', folder)
