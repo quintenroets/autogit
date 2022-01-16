@@ -133,9 +133,9 @@ class GitManager:
     def install(*names):
         urls = [f'git+{GitManager.get_base_url()}/{name}' for name in names]
         if not urls:
-            urls.append('-e .')
+            urls.append(('-e', '.'))
         for url in urls:
-            cli.run('pip install --force-reinstall --no-deps', url)
+            cli.run('pip install', {'force-reinstall', 'no-deps'}, url)
         for name in names:
             folder = Path.scripts / name
             folder.rmtree()
