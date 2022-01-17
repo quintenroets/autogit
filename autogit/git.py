@@ -55,8 +55,9 @@ class GitManager:
             with print_mutex:
                 cli.console.rule(title)
                 if not comitted:
-                    add = git.get('add .')
-                    status = git.get('status --porcelain')
+                    with cli.console.status('Adding changes'):
+                        add = git.get('add .')
+                        status = git.get('status --porcelain')
                     
                 if changes or status:
                     GitManager.updated = True
