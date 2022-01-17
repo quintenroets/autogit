@@ -4,14 +4,12 @@ import os
 import shlex
 import tbhandler.threading as threading
 
-from rich.console import Console
 from datetime import datetime
 from plib import Path
 
 from libs.parser import Parser
 
 print_mutex = threading.Lock()
-console = Console()
 
 
 class GitManager:
@@ -49,17 +47,16 @@ class GitManager:
             pull = git.get('pull')
             if 'Already up to date.' not in pull:
                 with print_mutex:
-                    console.rule(title)
+                    cli.console.rule(title)
                     print(pull)
                     GitManager.updated = True
 
         if changes or status or comitted:
             with print_mutex:
-                console.rule(title)
+                cli.console.rule(title)
                 if not comitted:
-                    with cli.status('Adding changes..'):
-                        add = git.get('add .')
-                        status = git.get('status --porcelain')
+                    add = git.get('add .')
+                    status = git.get('status --porcelain')
                     
                 if changes or status:
                     GitManager.updated = True
