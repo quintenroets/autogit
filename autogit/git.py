@@ -2,14 +2,13 @@ import cli
 import gui
 import os
 import shlex
-import threading
+import tbhandler.threading as threading
 
 from rich.console import Console
 from datetime import datetime
 from plib import Path
 
 from libs.parser import Parser
-from libs.threading import Thread, Threads
 
 print_mutex = threading.Lock()
 console = Console()
@@ -29,7 +28,7 @@ class GitManager:
         folders = [
             folder for root in roots for folder in root.find(is_git, follow_symlinks=False)
         ]
-        Threads(GitManager.update, folders, do_pull=do_pull).join()
+        threading.Threads(GitManager.update, folders, do_pull=do_pull).join()
         
         if do_pull and not GitManager.updated:
             print('Everything clean.')
@@ -72,7 +71,7 @@ class GitManager:
                         status_print = '\n'.join(status_lines + [''])
                         print(status_print)
                     
-                        pull = Thread(git.get, 'pull', check=False).start()
+                        pull = threading.Thread(git.get, 'pull', check=False).start()
                         commit_message = cli.ask('Commit and push?')
                     
                         while commit_message == 'show':
