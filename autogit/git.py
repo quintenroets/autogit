@@ -1,21 +1,22 @@
 import cli
 import gui
 import os
-import pexpect
 import shlex
 import tbhandler.threading as threading
 
-from datetime import datetime
 from plib import Path
 
 from libs.parser import Parser
+
 
 print_mutex = threading.Lock()
 
 
 def ask_push():
-    print('Commit and push? [y/N]', end=' ')
-    return input().strip()
+    default = 'cancel'
+    response = cli.prompt('Commit message', default=default)
+    response = response != default and response
+    return response
 
 
 class GitManager:
@@ -73,7 +74,7 @@ class GitManager:
                         git.show_verbose_status()
                         commit_message = ask_push()
 
-                    if commit_message and commit_message not in ['n', 'N']:
+                    if commit_message:
                         pull.join()
                         commit = git.get(f'commit -m"{commit_message}"')
                         git.run('push')
@@ -160,7 +161,6 @@ class GitCommander:
         status = self.lines('status -v', tty=True)
         cli.run('clear')
         cli.console.rule(self.title)
-        
         diff_indices = [i for i, line in enumerate(status) if 'diff' in line] + [len(status)]
         for start, stop in zip(diff_indices, diff_indices[1:]):
             title = status[start]
