@@ -1,0 +1,121 @@
+import cli
+
+from tbhandler import Thread
+
+symbols = {'M': '*', 'D': '-', 'A': '+', 'R': '*', 'C': '*'}
+colors = {'M': 'blue', 'D': 'red', 'A': 'green', 'R': 'blue', 'C': 'blue'}
+
+
+def ask_push():
+    default = 'cancel'
+    response = cli.prompt('Commit message', default=default)
+    response = response != default and response
+    return response
+
+
+class Repo:
+    def __init__(self, path):
+        self.path = path
+        self.changed_files = {}
+        self.pull = None
+    
+    @property
+    def title(self):
+        return self.path.name.capitalize()
+        
+    def check_updates(self):
+        self.changes = self.get('diff')
+        self.status = self.get_status()
+        
+        # commited before but the push has failed
+        self.commited = not (self.changes or self.status) and any(['ahead' in line and '##' in line for line in self.lines('status --porcelain -b')])
+        
+        self.update = self.changes or self.status or self.commited
+        
+    def process_updates(self):
+        
+        if not self.commited:
+            self.get('add .')
+            self.status = self.get_status()
+                
+        if self.status or self.commited:            
+            cli.console.rule(self.title)
+            if self.status:
+                self.show_status()
+            
+                pull = Thread(self.do_pull, check=False).start()
+                commit_message = ask_push()
+
+                while commit_message == 'show':
+                    self.show_verbose_status()
+                    commit_message = ask_push()
+
+                if commit_message:
+                    pull.join()
+                    commit = self.get(f'commit -m"{commit_message}"')
+                    self.run('push')
+            else:
+                if cli.confirm('Retry push?', default=True):
+                    self.run('push')
+                    
+            cli.run('clear')
+    
+    def show_status(self):
+        filenames = {}
+        for line in self.status:
+            symbol, filename = line.split()
+            self.changed_files[filename] = symbol
+            color = colors.get(symbol, '')
+            line = symbols.get(symbol, '') + f' [bold {color}]' + filename
+            cli.console.print(line)
+                        
+        cli.console.print('')
+        
+    def show_verbose_status(self):
+        status = self.lines('status -v', capture_output_tty=True)
+        cli.run('clear')
+        cli.console.rule(self.title)
+        diff_indices = [i for i, line in enumerate(status) if 'diff' in line] + [len(status)]
+        for start, stop in zip(diff_indices, diff_indices[1:]):
+            title = status[start]
+            for filename, symbol in self.changed_files.items():
+                if filename in title:
+                    color = colors.get(symbol, '')
+                    line = symbols.get(symbol, '') + f' [bold {color}]' + filename + '\n'
+                    cli.console.print(line)
+            diff = '\n'.join([l for l in status[start:stop] if '\x1b[1m' not in l]) + '\n'
+            print(diff)
+        
+    def get_status(self):
+        return self.lines('status --porcelain')
+        
+    def do_pull(self, check=True):
+        self.pull = self.get('pull', check=check)
+        
+    def show_pull(self):
+        if 'Already up to date.' not in self.pull:
+            cli.console.rule(git.title)
+            print(pull)
+            return True
+        
+    def lines(self, command, **kwargs):
+        lines = self.get(command, **kwargs).split('\n')
+        lines = [l for l in lines if l]
+        return lines
+        
+    def get(self, command, **kwargs):
+        output = self.run(command, **kwargs, capture_output=True)
+        if 'capture_output_tty' not in kwargs:
+            output = output.stdout
+        return output.strip()
+        
+    def run(self, command, **kwargs):
+        self.check(command)
+        return cli.run(f'git -C {self.path} {command}', **kwargs)
+    
+    def check(self, command):
+        if command in ['pull', 'push']:
+            url = self.get('config remote.origin.url')
+            if '@' not in url:
+                url = url.replace('https://', f'https://{os.environ["gittoken"]}@')
+                self.run(f'config remote.origin.url {url}') 

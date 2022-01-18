@@ -1,6 +1,21 @@
 import argparse
 
-from .git import GitManager
+    
+def install():
+    from .installer import Installer
+    Installer.install()
+    
+
+def clone():
+    from .installer import Installer
+    Installer.clone()
+    
+    
+    
+def refresh(do_pull=False):
+    from .repomanager import RepoManager
+    RepoManager.refresh(do_pull=do_pull)
+    
 
 def main():
     parser = argparse.ArgumentParser(description='Automate common git workflows')
@@ -9,11 +24,12 @@ def main():
         
     args = parser.parse_args()
     action_mapper = {
-        'refresh': GitManager.refresh,
-        'clone': GitManager.clone,
-        'install': GitManager.install,
-        'pull': lambda: GitManager.refresh(do_pull=True)
+        'refresh': refresh,
+        'clone': clone,
+        'install': install,
+        'pull': lambda: refresh(do_pull=True)
         }
+    
     if args.action not in action_mapper:
         raise Exception(f'{args.action} not defined')
     action = action_mapper[args.action]
