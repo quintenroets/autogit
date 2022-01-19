@@ -69,9 +69,7 @@ class Repo:
             self.changed_files[filename] = symbol
             color = colors.get(symbol, '')
             line = symbols.get(symbol, '') + f' [bold {color}]' + filename
-            #cli.console.print(line)
                         
-        #cli.console.print('')
         self.show_verbose_status(force=False)
         
     def show_verbose_status(self, force=False):
