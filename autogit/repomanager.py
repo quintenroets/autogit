@@ -6,7 +6,6 @@ from plib import Path
 from libs.parser import Parser
 from tbhandler import Threads
 from .repo import Repo
-        
 
 
 class RepoManager:
