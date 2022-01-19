@@ -1,4 +1,5 @@
 import cli
+import os
 
 from threading import Thread
 
@@ -48,7 +49,7 @@ class Repo:
                 commit_message = ask_push()
 
                 while commit_message == 'show':
-                    self.show_verbose_status()
+                    self.show_verbose_status(force=True)
                     commit_message = ask_push()
 
                 if commit_message and len(commit_message) > 5:
@@ -68,24 +69,32 @@ class Repo:
             self.changed_files[filename] = symbol
             color = colors.get(symbol, '')
             line = symbols.get(symbol, '') + f' [bold {color}]' + filename
-            cli.console.print(line)
+            #cli.console.print(line)
                         
-        cli.console.print('')
+        #cli.console.print('')
+        self.show_verbose_status(force=False)
         
-    def show_verbose_status(self):
+    def show_verbose_status(self, force=False):
         status = self.lines('status -v', capture_output_tty=True)
         cli.run('clear')
         cli.console.rule(self.title)
         diff_indices = [i for i, line in enumerate(status) if 'diff' in line] + [len(status)]
+        lines = os.get_terminal_size().lines - 10
+        
         for start, stop in zip(diff_indices, diff_indices[1:]):
             title = status[start]
             for filename, symbol in self.changed_files.items():
                 if filename in title:
                     color = colors.get(symbol, '')
                     line = symbols.get(symbol, '') + f' [bold {color}]' + filename + '\n'
-                    cli.console.print(line)
-            diff = '\n'.join([l for l in status[start:stop] if '\x1b[1m' not in l]) + '\n'
-            print(diff)
+                    cli.console.print(line, end='')
+            diff = [part for l in status[start:stop] for part in l.split('@@') if '\x1b[1m' not in l]
+            
+            if lines > len(diff) or force:
+                lines -= len(diff)
+                for d in diff:
+                    print(d)
+                print()
         
     def get_status(self):
         return self.lines('status --porcelain')
