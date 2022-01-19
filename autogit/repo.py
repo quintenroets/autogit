@@ -8,9 +8,7 @@ colors = {'M': 'blue', 'D': 'red', 'A': 'green', 'R': 'blue', 'C': 'blue'}
 
 
 def ask_push():
-    default = 'cancel'
-    response = cli.prompt('Commit message', default=default)
-    response = response != default and response
+    response = cli.prompt('Commit message', default=False)
     return response
 
 
