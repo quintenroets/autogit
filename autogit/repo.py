@@ -1,6 +1,6 @@
 import cli
 
-from tbhandler import Thread
+from threading import Thread
 
 symbols = {'M': '*', 'D': '-', 'A': '+', 'R': '*', 'C': '*'}
 colors = {'M': 'blue', 'D': 'red', 'A': 'green', 'R': 'blue', 'C': 'blue'}
@@ -43,14 +43,15 @@ class Repo:
             if self.status:
                 self.show_status()
             
-                pull = Thread(self.do_pull, check=False).start()
+                pull = Thread(target=self.do_pull, kwargs={'check': False})
+                pull.start()
                 commit_message = ask_push()
 
                 while commit_message == 'show':
                     self.show_verbose_status()
                     commit_message = ask_push()
 
-                if commit_message:
+                if commit_message and len(commit_message) > 5:
                     pull.join()
                     commit = self.get(f'commit -m"{commit_message}"')
                     self.run('push')

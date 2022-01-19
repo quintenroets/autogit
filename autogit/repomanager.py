@@ -4,7 +4,7 @@ import threading
 
 from plib import Path
 from libs.parser import Parser
-from tbhandler import Threads
+from libs.threading import Threads
 from .repo import Repo
 
 
@@ -25,7 +25,7 @@ class RepoManager:
         repos = [Repo(folder) for folder in folders]
         if do_pull:
             with cli.console.status('Pulling'):
-                Threads(r.do_pull for r in repos).join()
+                Threads(r.do_pull for r in repos).start().join()
 
             for r in repos:
                 RepoManager.updated = RepoManager.updated or r.show_pull()
@@ -33,7 +33,7 @@ class RepoManager:
                 cli.console.print('No remote changes [bold green]\u2713')
                 
         else:
-            Threads(r.check_updates for r in repos).join()
+            Threads(r.check_updates for r in repos).start().join()
             for r in repos:
                 if r.update:
                     r.process_updates()
