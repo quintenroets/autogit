@@ -75,7 +75,7 @@ class Repo:
         cli.run('clear')
         cli.console.rule(self.title)
         diff_indices = [i for i, line in enumerate(status) if 'diff' in line] + [len(status)]
-        lines = os.get_terminal_size().lines - 10
+        lines_amount = os.get_terminal_size().lines - 6
         
         for start, stop in zip(diff_indices, diff_indices[1:]):
             title = status[start]
@@ -84,13 +84,12 @@ class Repo:
                     color = colors.get(symbol, '')
                     line = symbols.get(symbol, '') + f' [bold {color}]' + filename + '\n'
                     cli.console.print(line, end='')
-            diff = [part for l in status[start:stop] for part in l.split('@@') if '\x1b[1m' not in l]
+            diff = [part for l in status[start:stop] for part in l.split('@@') if '\x1b[1m' not in l] + ['']
             
-            if lines > len(diff) or force:
-                lines -= len(diff)
+            if lines_amount > len(diff) or force:
+                lines_amount -= len(diff)
                 for d in diff:
                     print(d)
-                print()
         
     def get_status(self):
         return self.lines('status --porcelain')
