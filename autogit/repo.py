@@ -59,7 +59,7 @@ class Repo:
                 commit_message = ask_push()
 
                 while commit_message == "show":
-                    self.show_verbose_status(force=True)
+                    self.show_status(verbose=True)
                     commit_message = ask_push()
 
                 if commit_message and len(commit_message) > 5:
@@ -76,7 +76,11 @@ class Repo:
             print("cleaned")
 
     def run_hooks(self):
-        cli.run("isort --apply -q", cwd=self.path)
+        for line in self.status:
+            symbol, filename = line.split()
+            self.changed_files[filename] = symbol
+
+        cli.run("isort --apply -q", *self.changed_files.keys(), cwd=self.path)
         if (self.path / ".pre-commit-config.yaml").exists():
             autochanges = (
                 subprocess.run(
@@ -87,14 +91,7 @@ class Repo:
             if autochanges:
                 self.add()
 
-    def show_status(self):
-        for line in self.status:
-            symbol, filename = line.split()
-            self.changed_files[filename] = symbol
-
-        self.show_verbose_status(force=False)
-
-    def show_verbose_status(self, force=False):
+    def show_status(self, verbose=False):
         status = self.lines("status -v", capture_output_tty=True)
 
         diff_indices = [i for i, line in enumerate(status) if "diff" in line] + [
@@ -118,7 +115,7 @@ class Repo:
                 if "\x1b[1m" not in l
             ] + [""]
 
-            if lines_amount > len(diff) or force:
+            if lines_amount > len(diff) or verbose:
                 lines_amount -= len(diff)
                 for d in diff:
                     print(d)
