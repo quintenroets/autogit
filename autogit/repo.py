@@ -18,11 +18,7 @@ class Repo:
         self.path = path
         self.changed_files = {}
         self.pull, self.changes, self.status, self.committed, self.update = (
-            None,
-            None,
-            None,
-            None,
-            None,
+            None for _ in range(5)
         )
 
     @property
