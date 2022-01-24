@@ -70,6 +70,9 @@ class Repo:
 
             cli.run("clear")
 
+        else:
+            print("cleaned")
+
     def run_hooks(self):
         if (self.path / ".pre-commit-config.yaml").exists():
             autochanges = (
