@@ -75,13 +75,14 @@ class Repo:
         else:
             print("cleaned")
 
-    def run_hooks(self):
+    def run_hooks(self, real_commit=True):
         for line in self.status:
             symbol, filename = line.split()
             self.changed_files[filename] = symbol
 
         cli.run("isort --apply -q", *self.changed_files.keys(), cwd=self.path)
-        if (self.path / ".pre-commit-config.yaml").exists():
+
+        if (self.path / ".pre-commit-config.yaml").exists() and real_commit:
             autochanges = (
                 subprocess.run(
                     ("pre-commit", "run"), cwd=self.path, capture_output=True
@@ -90,6 +91,8 @@ class Repo:
             )
             if autochanges:
                 self.add()
+        else:
+            cli.run("black -q", *self.changed_files.keys(), cwd=self.path)
 
     def show_status(self, verbose=False):
         status = self.lines("status -v", capture_output_tty=True)
