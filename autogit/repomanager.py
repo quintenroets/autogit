@@ -1,10 +1,11 @@
-import cli
 import os
 import threading
 
-from plib import Path
+import cli
 from libs.parser import Parser
 from libs.threading import Threads
+from plib import Path
+
 from .repo import Repo
 
 

@@ -1,8 +1,8 @@
-import cli
 import os
 import subprocess
-
 from threading import Thread
+
+import cli
 
 symbols = {"M": "*", "D": "-", "A": "+", "R": "*", "C": "*"}
 colors = {"M": "blue", "D": "red", "A": "green", "R": "blue", "C": "blue"}
@@ -74,6 +74,7 @@ class Repo:
             print("cleaned")
 
     def run_hooks(self):
+        cli.run("isort --apply", cwd=self.path)
         if (self.path / ".pre-commit-config.yaml").exists():
             autochanges = (
                 subprocess.run(
@@ -81,8 +82,8 @@ class Repo:
                 ).returncode
                 != 0
             )
-        if autochanges:
-            self.add()
+            if autochanges:
+                self.add()
 
     def show_status(self):
         filenames = {}

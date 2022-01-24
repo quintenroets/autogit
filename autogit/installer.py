@@ -1,7 +1,7 @@
-import cli
-import gui
 import os
 
+import cli
+import gui
 from plib import Path
 
 

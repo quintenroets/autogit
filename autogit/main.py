@@ -1,6 +1,6 @@
 import argparse
 
-    
+
 def install():
     from .installer import Installer
     Installer.install()
