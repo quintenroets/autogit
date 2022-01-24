@@ -17,7 +17,13 @@ class Repo:
     def __init__(self, path):
         self.path = path
         self.changed_files = {}
-        self.pull = None
+        self.pull, self.changes, self.status, self.committed, self.update = (
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
 
     @property
     def title(self):
@@ -29,15 +35,15 @@ class Repo:
         )
         self.status = self.get_status()
 
-        # commited before but the push has failed
-        self.commited = not (self.changes or self.status) and any(
+        # committed before but the push has failed
+        self.committed = not (self.changes or self.status) and any(
             [
                 "ahead" in line and "##" in line
                 for line in self.lines("status --porcelain -b")
             ]
         )
 
-        self.update = self.changes or self.status or self.commited
+        self.update = self.changes or self.status or self.committed
 
     def process_updates(self):
         self.clear()
@@ -48,7 +54,7 @@ class Repo:
         if self.status:
             self.run_hooks()
 
-        if self.status or self.commited:
+        if self.status or self.committed:
             if self.status:
                 self.show_status()
 
@@ -74,7 +80,7 @@ class Repo:
             print("cleaned")
 
     def run_hooks(self):
-        cli.run("isort --apply", cwd=self.path)
+        cli.run("isort --apply -q", cwd=self.path)
         if (self.path / ".pre-commit-config.yaml").exists():
             autochanges = (
                 subprocess.run(
@@ -86,7 +92,6 @@ class Repo:
                 self.add()
 
     def show_status(self):
-        filenames = {}
         for line in self.status:
             symbol, filename = line.split()
             self.changed_files[filename] = symbol
@@ -138,8 +143,8 @@ class Repo:
 
     def show_pull(self):
         if "Already up to date." not in self.pull:
-            cli.console.rule(git.title)
-            print(pull)
+            self.clear()
+            print(self.pull)
             return True
 
     def lines(self, command, **kwargs):
