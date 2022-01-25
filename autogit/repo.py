@@ -80,6 +80,8 @@ class Repo:
             symbol, filename = line.split()
             self.changed_files[filename] = symbol
 
+        return  # disable for now because hooks are always run on filesaves
+
         cli.run("isort --apply -q", *self.changed_files.keys(), cwd=self.path)
 
         if (self.path / ".pre-commit-config.yaml").exists() and real_commit:
