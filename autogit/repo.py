@@ -16,7 +16,7 @@ def ask_push():
 class Repo:
     def __init__(self, path):
         self.path = path
-        self.changed_files = {}
+        self.changed_files = None
         self.pull, self.changes, self.status, self.committed, self.update = (
             None for _ in range(5)
         )
@@ -47,9 +47,6 @@ class Repo:
         if self.changes:
             self.add()
 
-        if self.status:
-            self.run_hooks()
-
         if self.status or self.committed:
             if self.status:
                 self.show_status()
@@ -63,6 +60,7 @@ class Repo:
                     commit_message = ask_push()
 
                 if commit_message and len(commit_message) > 5:
+                    self.run_hooks()
                     pull.join()
                     commit = self.get(f'commit -m"{commit_message}"')
                     self.run("push")
@@ -76,27 +74,22 @@ class Repo:
             print("cleaned")
 
     def run_hooks(self, real_commit=True):
-        for line in self.status:
-            symbol, filename = line.split()
-            self.changed_files[filename] = symbol
-
-        return  # disable for now because hooks are always run on filesaves
-
         cli.run("isort --apply -q", *self.changed_files.keys(), cwd=self.path)
-
-        if (self.path / ".pre-commit-config.yaml").exists() and real_commit:
-            autochanges = (
-                subprocess.run(
-                    ("pre-commit", "run"), cwd=self.path, capture_output=True
-                ).returncode
-                != 0
-            )
-            if autochanges:
-                self.add()
+        if real_commit:
+            if (self.path / ".pre-commit-config.yaml").exists():
+                cli.run("pre-commit run", cwd=self.path)
+            self.add()
         else:
             cli.run("black -q", *self.changed_files.keys(), cwd=self.path)
 
     def show_status(self, verbose=False):
+        if self.changed_files is None:
+            self.changed_files = {
+                filename: symbol
+                for line in self.status
+                for symbol, filename in (line.split(),)
+            }
+
         status = self.lines("status -v", capture_output_tty=True)
 
         diff_indices = [i for i, line in enumerate(status) if "diff" in line] + [
