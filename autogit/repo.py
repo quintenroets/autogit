@@ -61,9 +61,13 @@ class Repo:
 
                 if commit_message and len(commit_message) > 5:
                     self.run_hooks()
-                    pull.join()
-                    commit = self.get(f'commit -m"{commit_message}"')
-                    self.run("push")
+                    if self.status:
+                        pull.join()
+                        commit = self.get(f'commit -m"{commit_message}"')
+                        self.run("push")
+                    else:
+                        print("cleaned")
+
             else:
                 if cli.confirm("Retry push?", default=True):
                     self.run("push")
@@ -77,7 +81,7 @@ class Repo:
         cli.run("isort --apply -q", *self.changed_files.keys(), cwd=self.path)
         if real_commit:
             if (self.path / ".pre-commit-config.yaml").exists():
-                cli.run("pre-commit run", cwd=self.path)
+                cli.run("pre-commit run", check=False, cwd=self.path)
             self.add()
         else:
             cli.run("black -q", *self.changed_files.keys(), cwd=self.path)
