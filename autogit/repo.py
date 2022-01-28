@@ -89,9 +89,9 @@ class Repo:
     def show_status(self, verbose=False):
         if self.changed_files is None:
             self.changed_files = {
-                filename: symbol
+                filenames[-1]: symbol
                 for line in self.status
-                for symbol, filename in (line.split(),)
+                for symbol, *filenames in (line.split(),)
             }
 
         status = self.lines("status -v", capture_output_tty=True)
