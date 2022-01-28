@@ -78,13 +78,15 @@ class Repo:
             print("cleaned")
 
     def run_hooks(self, real_commit=True):
-        cli.run("isort --apply -q", *self.changed_files.keys(), cwd=self.path)
+        # only lint python files
+        python_files_changed = [f for f in self.changed_files if f.endswith(".py")]
+        cli.run("isort --apply -q", *python_files_changed, cwd=self.path)
         if real_commit:
             if (self.path / ".pre-commit-config.yaml").exists():
                 cli.run("pre-commit run", check=False, cwd=self.path)
             self.add()
         else:
-            cli.run("black -q", *self.changed_files.keys(), cwd=self.path)
+            cli.run("black -q", *python_files_changed, cwd=self.path)
 
     def show_status(self, verbose=False):
         if self.changed_files is None:
