@@ -60,7 +60,8 @@ class Repo:
                     commit_message = ask_push()
 
                 if commit_message and len(commit_message) > 5:
-                    self.run_hooks()
+                    with cli.console.status("auto formatting"):
+                        self.run_hooks()
                     if self.status:
                         pull.join()
                         commit = self.get(f'commit -m"{commit_message}"')
