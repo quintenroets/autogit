@@ -60,7 +60,7 @@ class Repo:
                     commit_message = ask_push()
 
                 if commit_message and len(commit_message) > 5:
-                    with cli.console.status("auto formatting"):
+                    with cli.console.status("formatting"):
                         self.run_hooks()
                     if self.status:
                         pull.join()
