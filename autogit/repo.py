@@ -56,6 +56,7 @@ class Repo:
                 commit_message = ask_push()
 
                 while commit_message == "show":
+                    self.clear()
                     self.show_status(verbose=True)
                     commit_message = ask_push()
 
