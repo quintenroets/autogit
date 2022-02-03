@@ -1,16 +1,16 @@
 import argparse
 
 
-def install():
+def install(*args):
     from .installer import Installer
 
-    Installer.install()
+    Installer.install(*args)
 
 
-def clone():
+def clone(*args):
     from .installer import Installer
 
-    Installer.clone()
+    Installer.clone(*args)
 
 
 def refresh(do_pull=False):
