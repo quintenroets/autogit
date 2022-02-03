@@ -103,7 +103,7 @@ class Repo:
         diff_indices = [i for i, line in enumerate(status) if "diff" in line] + [
             len(status)
         ]
-        lines_amount = os.get_terminal_size().lines - 6
+        lines_amount = os.get_terminal_size().lines * 2 - 6
 
         for start, stop in zip(diff_indices, diff_indices[1:]):
             title = status[start]
