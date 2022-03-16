@@ -65,7 +65,7 @@ class Repo:
                         self.run_hooks()
                     if self.status:
                         pull.join()
-                        commit = self.get(f'commit -m"{commit_message}"')
+                        self.get(f'commit -m"{commit_message}"')
                         self.run("push")
                     else:
                         print("cleaned")
