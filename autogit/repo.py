@@ -1,8 +1,13 @@
 import os
 import subprocess
+from dataclasses import dataclass
 from threading import Thread
+from typing import Dict, Union
 
 import cli
+from plib import Path
+
+from . import vpn
 
 symbols = {"M": "*", "D": "-", "A": "+", "R": "*", "C": "*"}
 colors = {"M": "blue", "D": "red", "A": "green", "R": "blue", "C": "blue"}
@@ -13,13 +18,24 @@ def ask_push():
     return response
 
 
+def is_remote(command: str) -> bool:
+    return command in ("push", "pull")
+
+
+def is_reachable(remote: str) -> bool:
+    return cli.check_succes(f"ping -c 1 {remote}")
+
+
+@dataclass
 class Repo:
-    def __init__(self, path):
-        self.path = path
-        self.changed_files = None
-        self.pull, self.changes, self.status, self.committed, self.update = (
-            None for _ in range(5)
-        )
+    path: Path
+    pull_output: str = None
+    changed: str = None
+    status: str = None
+    committed: bool = False
+    update: bool = False
+    vpn_activated: bool = False
+    changed_files: Union[Dict[str, str], None] = None
 
     @property
     def title(self):
@@ -138,12 +154,12 @@ class Repo:
         return self.lines("status --porcelain")
 
     def do_pull(self, check=True):
-        self.pull = self.get("pull", check=check)
+        self.pull_output = self.get("pull", check=check)
 
     def show_pull(self):
         if "Already up to date." not in self.pull:
             self.clear()
-            print(self.pull)
+            print(self.pull_output)
             return True
 
     def lines(self, command, **kwargs):
@@ -158,12 +174,28 @@ class Repo:
         return output.strip()
 
     def run(self, command, **kwargs):
-        self.check(command)
-        return cli.run(f"git -C {self.path} {command}", **kwargs)
+        self.before_command(command)
+        result = cli.run(f"git -C {self.path} {command}", **kwargs)
+        self.after_command(command)
+        return result
 
-    def check(self, command):
-        if command in ["pull", "push"]:
+    def before_command(self, command):
+        if is_remote(command):
             url = self.get("config remote.origin.url")
-            if "@" not in url:
-                url = url.replace("https://", f'https://{os.environ["gittoken"]}@')
-                self.run(f"config remote.origin.url {url}")
+            self.check_password(url)
+            self.check_vpn(url)
+
+    def check_password(self, url):
+        if "@" not in url:
+            url = url.replace("https://", f'https://{os.environ["gittoken"]}@')
+            self.run(f"config remote.origin.url {url}")
+
+    def check_vpn(self, url):
+        domain = url.split("@")[1].split("/")[0]
+        if not is_reachable(domain):
+            vpn.connect_vpn()
+            self.vpn_activated = True
+
+    def after_command(self, command):
+        if self.vpn_activated:
+            vpn.disconnect_vpn()
