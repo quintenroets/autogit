@@ -1,16 +1,12 @@
 import os
-import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from threading import Thread
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 import cli
 from plib import Path
 
 from . import vpn
-
-symbols = {"M": "*", "D": "-", "A": "+", "R": "*", "C": "*"}
-colors = {"M": "blue", "D": "red", "A": "green", "R": "blue", "C": "blue"}
 
 
 def ask_push():
@@ -30,32 +26,38 @@ def is_reachable(remote: str) -> bool:
 class Repo:
     path: Path
     pull_output: str = None
-    changed: str = None
-    status: str = None
-    committed: bool = False
+    changes: str = None
+    status: List[str] = field(default_factory=list)
+    committed: List[str] = field(default_factory=list)
     update: bool = False
     vpn_activated: bool = False
     changed_files: Union[Dict[str, str], None] = None
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self.path.name.capitalize()
 
+    @property
+    def auto_add(self) -> bool:
+        auto_add_skip_file = Path.assets / "autogit" / "skip_auto_add.yaml"
+        return self.path.name not in auto_add_skip_file.yaml
+
     def check_updates(self):
-        self.changes = self.get("diff") or self.get(
-            "ls-files --others --exclude-standard"
+        self.changes = (
+            self.get("diff") or self.get("ls-files --others --exclude-standard")
+            if self.auto_add
+            else ""
         )
-        self.status = self.get_status()
+        self.status = self.get_status() if self.auto_add else []
 
         # committed before but the push has failed
-        self.committed = not (self.changes or self.status) and any(
-            [
-                "ahead" in line and "##" in line
-                for line in self.lines("status --porcelain -b")
-            ]
-        )
+        self.committed = not (self.changes or self.status) and [
+            line
+            for line in self.lines("status --porcelain -b")
+            if "ahead" in line and "##" in line
+        ]
 
-        self.update = self.changes or self.status or self.committed
+        self.update = bool(self.changes or self.status or self.committed)
 
     def process_updates(self):
         self.clear()
@@ -87,7 +89,8 @@ class Repo:
                         print("cleaned")
 
             else:
-                if cli.confirm("Retry push?", default=True):
+                commit_info = self.committed[0].replace("[", "\[").replace("## ", "")
+                if cli.confirm(f"Push ({commit_info}) ?", default=True):
                     self.run("push")
 
             cli.run("clear")
@@ -121,20 +124,21 @@ class Repo:
         ]
         lines_amount = os.get_terminal_size().lines * 2 - 6
 
+        symbols = {"M": "*", "D": "-", "A": "+", "R": "*", "C": "*"}
+        colors = {"M": "blue", "D": "red", "A": "green", "R": "blue", "C": "blue"}
+
         for start, stop in zip(diff_indices, diff_indices[1:]):
             title = status[start]
             for filename, symbol in self.changed_files.items():
                 if filename in title:
                     color = colors.get(symbol, "")
-                    line = (
-                        symbols.get(symbol, "") + f" [bold {color}]" + filename + "\n"
-                    )
+                    line = symbols.get(symbol, "") + f" [bold {color}]{filename}\n"
                     cli.console.print(line, end="")
             diff = [
                 part
-                for l in status[start:stop]
-                for part in l.split("@@")
-                if "\x1b[1m" not in l
+                for line in status[start:stop]
+                for part in line.split("@@")
+                if "\x1b[1m" not in line
             ] + [""]
 
             if lines_amount > len(diff) or verbose:
@@ -157,7 +161,7 @@ class Repo:
         self.pull_output = self.get("pull", check=check)
 
     def show_pull(self):
-        if "Already up to date." not in self.pull:
+        if "Already up to date." not in self.pull_output:
             self.clear()
             print(self.pull_output)
             return True
@@ -196,6 +200,7 @@ class Repo:
             vpn.connect_vpn()
             self.vpn_activated = True
 
-    def after_command(self, command):
+    def after_command(self, _):
         if self.vpn_activated:
             vpn.disconnect_vpn()
+            self.vpn_activated = False
