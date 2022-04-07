@@ -8,6 +8,8 @@ from plib import Path
 
 from . import vpn
 
+no_pull_changes_message = "Already up to date."
+
 
 def ask_push():
     response = cli.prompt("Commit message", default=False)
@@ -161,7 +163,7 @@ class Repo:
         self.pull_output = self.get("pull", check=check)
 
     def show_pull(self):
-        if "Already up to date." not in self.pull_output:
+        if no_pull_changes_message not in self.pull_output:
             self.clear()
             print(self.pull_output)
             return True
@@ -179,7 +181,22 @@ class Repo:
 
     def run(self, command, **kwargs):
         self.before_command(command)
-        result = cli.run(f"git -C {self.path} {command}", **kwargs)
+        try:
+            result = cli.run(f"git -C {self.path} {command}", **kwargs)
+        except Exception as e:
+            if "Could not resolve host" in str(e):
+                if command == "push":
+                    vpn.connect_vpn()
+                    self.vpn_activated = True
+                    result = cli.run(f"git -C {self.path} {command}", **kwargs)
+                elif command == "pull":
+                    # ignore not reachable after vpn when pulling
+                    result = cli.run(f"echo {no_pull_changes_message}", **kwargs)
+                else:
+                    raise e
+            else:
+                raise e
+
         self.after_command(command)
         return result
 
@@ -187,7 +204,6 @@ class Repo:
         if is_remote(command):
             url = self.get("config remote.origin.url")
             self.check_password(url)
-            self.check_vpn(url)
 
     def check_password(self, url):
         if "@" not in url:
