@@ -24,6 +24,12 @@ def is_reachable(remote: str) -> bool:
     return cli.check_succes(f"ping -c 1 {remote}")
 
 
+def is_vpn_error(exc: Exception):
+    vpn_error_messages = ("Could not resolve host", "status 128")
+    error_message = str(exc)
+    return any(m in error_message for m in vpn_error_messages)
+
+
 @dataclass
 class Repo:
     path: Path
@@ -184,8 +190,9 @@ class Repo:
         try:
             result = cli.run(f"git -C {self.path} {command}", **kwargs)
         except Exception as e:
-            if "Could not resolve host" in str(e):
+            if is_vpn_error(e):
                 if command == "push":
+                    pprint("Activating VPN..")
                     vpn.connect_vpn()
                     self.vpn_activated = True
                     result = cli.run(f"git -C {self.path} {command}", **kwargs)
