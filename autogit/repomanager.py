@@ -5,17 +5,17 @@ from plib import Path
 from .repo import Repo
 
 
-def get_repos(*roots):
+def get_repos(*roots: Path):
     if not roots:
         roots = [Path.scripts]
 
-    def is_git(folder):
+    def is_git(folder: Path):
         return (folder / ".git").exists()
 
     repos = [
         Repo(folder)
         for root in roots
-        for folder in root.find(is_git, follow_symlinks=False)
+        for folder in root.find(is_git, exclude=lambda path: path.name == "assets")
     ]
     return repos
 
