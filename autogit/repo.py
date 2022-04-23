@@ -109,12 +109,13 @@ class Repo:
     def run_hooks(self, real_commit=True):
         # only lint python files
         python_files_changed = [f for f in self.changed_files if f.endswith(".py")]
-        cli.get("isort --apply -q", *python_files_changed, cwd=self.path)
+        if python_files_changed:
+            cli.get("isort --apply -q", *python_files_changed, cwd=self.path)
         if real_commit:
             if (self.path / ".pre-commit-config.yaml").exists():
                 cli.get("pre-commit run", check=False, cwd=self.path)
             self.add()
-        else:
+        elif python_files_changed:
             cli.run("black -q", *python_files_changed, cwd=self.path)
 
     def show_status(self, verbose=False):
