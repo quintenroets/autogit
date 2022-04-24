@@ -2,25 +2,25 @@ import argparse
 
 
 def install(*args):
-    from .installer import Installer
+    from .installer import Installer  # noqa: autoimport
 
     Installer.install(*args)
 
 
 def clone(*args):
-    from .installer import Installer
+    from .repomanager import RepoManager  # noqa: autoimport
 
     Installer.clone(*args)
 
 
 def refresh(do_pull=False):
-    from .repomanager import RepoManager
+    from .repomanager import RepoManager  # noqa: autoimport
 
     RepoManager.refresh(do_pull=do_pull)
 
 
 def run_hooks():
-    from .repomanager import RepoManager
+    from .repomanager import RepoManager  # noqa: autoimport
 
     RepoManager.run_hooks()
 
