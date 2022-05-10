@@ -8,7 +8,7 @@ def install(*args):
 
 
 def clone(*args):
-    from .repomanager import RepoManager  # noqa: autoimport
+    from .installer import Installer  # noqa: autoimport
 
     Installer.clone(*args)
 
