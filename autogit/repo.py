@@ -7,6 +7,7 @@ import cli
 from plib import Path
 
 from . import vpn
+from .token import git_token
 
 no_pull_changes_message = "Already up to date."
 
@@ -215,7 +216,7 @@ class Repo:
 
     def check_password(self, url):
         if "@" not in url:
-            url = url.replace("https://", f'https://{os.environ["gittoken"]}@')
+            url = url.replace("https://", f"https://{git_token()}@")
             self.run(f"config remote.origin.url {url}")
 
     def check_vpn(self, url):

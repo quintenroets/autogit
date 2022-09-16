@@ -1,8 +1,8 @@
-import os
-
 import cli
 import gui
 from plib import Path
+
+from .token import git_token
 
 
 class Installer:
@@ -11,12 +11,12 @@ class Installer:
     def git(cls):
         from github import Github  # noqa: autoimport
 
-        return Github(os.environ["gittoken"])
+        return Github(git_token())
 
     @classmethod
     @property
     def base_url(cls):
-        return f'https://{os.environ["gittoken"]}@github.com/{cls.git.get_user().login}'
+        return f"https://{git_token()}@github.com/{cls.git.get_user().login}"
 
     @staticmethod
     def get_all_repos():
