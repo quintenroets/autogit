@@ -2,7 +2,7 @@ import cli
 import gui
 from plib import Path
 
-from .token import git_token
+from . import repomanager
 
 
 class Installer:
@@ -11,12 +11,18 @@ class Installer:
     def git(cls):
         from github import Github  # noqa: autoimport
 
-        return Github(git_token())
+        token = cli.get("pw gittoken")
+        return Github(token)
+
+    @classmethod
+    @property
+    def username(cls):
+        return cls.git.get_user().login
 
     @classmethod
     @property
     def base_url(cls):
-        return f"https://{git_token()}@github.com/{cls.git.get_user().login}"
+        return f"https://github.com/{cls.username}"
 
     @staticmethod
     def get_all_repos():
@@ -33,7 +39,7 @@ class Installer:
     def clone(*names):
         if not names:
             with cli.console.status("Fetching repo list"):
-                repos = GitManager.get_all_repos()
+                repos = repomanager.get_repos()
             name = gui.ask("Choose repo", repos)
             if name:
                 names = [name]

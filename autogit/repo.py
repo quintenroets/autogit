@@ -7,7 +7,6 @@ import cli
 from plib import Path
 
 from . import vpn
-from .token import git_token
 
 no_pull_changes_message = "Already up to date."
 
@@ -188,7 +187,6 @@ class Repo:
         return output.strip()
 
     def run(self, command, **kwargs):
-        self.before_command(command)
         try:
             result = cli.run(f"git -C {self.path} {command}", **kwargs)
         except Exception as e:
@@ -208,16 +206,6 @@ class Repo:
 
         self.after_command(command)
         return result
-
-    def before_command(self, command):
-        if is_remote(command):
-            url = self.get("config remote.origin.url")
-            self.check_password(url)
-
-    def check_password(self, url):
-        if "@" not in url:
-            url = url.replace("https://", f"https://{git_token()}@")
-            self.run(f"config remote.origin.url {url}")
 
     def check_vpn(self, url):
         domain = url.split("@")[1].split("/")[0]
