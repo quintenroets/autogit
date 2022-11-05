@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass, field
 from threading import Thread
-from typing import Dict, List, Union
+from typing import Dict, List
 
 import cli
 from plib import Path
@@ -39,7 +39,6 @@ class Repo:
     committed: List[str] = field(default_factory=list)
     update: bool = False
     vpn_activated: bool = False
-    changed_files: Union[Dict[str, str], None] = None
 
     @property
     def title(self) -> str:
@@ -87,8 +86,6 @@ class Repo:
                     commit_message = ask_push()
 
                 if commit_message and len(commit_message) > 5:
-                    with cli.console.status("Formatting"):
-                        self.run_hooks()
                     if self.status:
                         pull.join()
                         self.get(f'commit -m"{commit_message}"')
@@ -106,26 +103,20 @@ class Repo:
         else:
             print("cleaned")
 
-    def run_hooks(self, real_commit=True):
-        # only lint python files
-        python_files_changed = [f for f in self.changed_files if f.endswith(".py")]
-        if python_files_changed:
-            cli.get("isort --apply -q", *python_files_changed, cwd=self.path)
-        if real_commit:
-            if (self.path / ".pre-commit-config.yaml").exists():
-                cli.get("pre-commit run", check=False, cwd=self.path)
-            self.add()
-        elif python_files_changed:
-            cli.run("black -q", *python_files_changed, cwd=self.path)
+    def run_hooks(self):
+        pre_commit_file = self.path / ".git" / "hooks" / "pre-commit"
+        if pre_commit_file.exists():
+            cli.run(pre_commit_file, cwd=self.path)
+
+    @property
+    def changed_files(self) -> Dict[str, str]:
+        return {
+            filenames[-1]: symbol
+            for line in self.status
+            for symbol, *filenames in (line.split(),)
+        }
 
     def show_status(self, verbose=False):
-        if self.changed_files is None:
-            self.changed_files = {
-                filenames[-1]: symbol
-                for line in self.status
-                for symbol, *filenames in (line.split(),)
-            }
-
         status = self.lines("status -v", capture_output_tty=True)
 
         diff_indices = [i for i, line in enumerate(status) if "diff" in line] + [
@@ -161,6 +152,9 @@ class Repo:
 
     def add(self):
         self.get("add .")
+        self.run_hooks()
+        self.get("add .")
+
         self.status = self.get_status()
 
     def get_status(self):
