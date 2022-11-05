@@ -106,7 +106,8 @@ class Repo:
     def run_hooks(self):
         pre_commit_file = self.path / ".git" / "hooks" / "pre-commit"
         if pre_commit_file.exists():
-            cli.run(pre_commit_file, cwd=self.path)
+            with cli.status("formatting"):
+                cli.get(pre_commit_file, cwd=self.path)
 
     @property
     def changed_files(self) -> Dict[str, str]:
