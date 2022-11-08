@@ -21,7 +21,7 @@ def is_remote(command: str) -> bool:
 
 
 def is_reachable(remote: str) -> bool:
-    return cli.check_succes(f"ping -c 1 {remote}")
+    return cli.is_succes(f"ping -c 1 {remote}")
 
 
 def is_vpn_error(exc: Exception):
