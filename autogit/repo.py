@@ -21,7 +21,7 @@ def is_remote(command: str) -> bool:
 
 
 def is_reachable(remote: str) -> bool:
-    return cli.is_succes(f"ping -c 1 {remote}")
+    return cli.is_success(f"ping -c 1 {remote}")
 
 
 def is_vpn_error(exc: Exception):
@@ -88,7 +88,7 @@ class Repo:
                 if commit_message and len(commit_message) > 5:
                     if self.status:
                         pull.join()
-                        self.get(f'commit -m"{commit_message}"')
+                        self.run(f'commit -m"{commit_message}"')
                         self.run("push")
                     else:
                         print("cleaned")
@@ -106,8 +106,7 @@ class Repo:
     def run_hooks(self):
         pre_commit_file = self.path / ".git" / "hooks" / "pre-commit"
         if pre_commit_file.exists():
-            with cli.status("formatting"):
-                cli.get(pre_commit_file, cwd=self.path)
+            cli.run(pre_commit_file, cwd=self.path)
 
     @property
     def changed_files(self) -> Dict[str, str]:
@@ -182,31 +181,9 @@ class Repo:
         return output.strip()
 
     def run(self, command, **kwargs):
-        try:
-            result = cli.run(f"git -C {self.path} {command}", **kwargs)
-        except Exception as e:
-            if is_vpn_error(e):
-                if command == "push":
-                    pprint("Activating VPN..")
-                    vpn.connect_vpn()
-                    self.vpn_activated = True
-                    result = cli.run(f"git -C {self.path} {command}", **kwargs)
-                elif command == "pull":
-                    # ignore not reachable after vpn when pulling
-                    result = cli.run(f"echo {no_pull_changes_message}", **kwargs)
-                else:
-                    raise e
-            else:
-                raise e
-
+        result = cli.run(f"git -C {self.path} {command}", **kwargs)
         self.after_command(command)
         return result
-
-    def check_vpn(self, url):
-        domain = url.split("@")[1].split("/")[0]
-        if not is_reachable(domain):
-            vpn.connect_vpn()
-            self.vpn_activated = True
 
     def after_command(self, _):
         if self.vpn_activated:
