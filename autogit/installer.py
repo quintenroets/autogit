@@ -53,10 +53,12 @@ class Installer:
     @staticmethod
     def install(*names):
         urls = [f"git+{Installer.base_url}/{name}" for name in names]
+        cwd = None
         if not urls:
+            cwd = cli.get("git rev-parse --show-toplevel")
             urls.append(("-e", "."))
         for url in urls:
-            cli.run("pip install", {"force-reinstall", "no-deps"}, url)
+            cli.run("pip install", {"force-reinstall", "no-deps"}, url, cwd=cwd)
         for name in names:
             folder = Path.scripts / name
             folder.rmtree()
