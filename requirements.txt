@@ -1,5 +1,5 @@
-cli @ git+https://github.com/quintenroets/cli
 gui @ git+https://github.com/quintenroets/gui
-superpathlib @ git+https://github.com/quintenroets/superpathlib
 isort
 PyGithub
+quinten-cli
+superpathlib
