@@ -1,7 +1,6 @@
 import os
 from dataclasses import dataclass, field
 from threading import Thread
-from typing import Dict, List
 
 import cli
 from plib import Path
@@ -35,8 +34,8 @@ class Repo:
     path: Path
     pull_output: str = None
     changes: str = None
-    status: List[str] = field(default_factory=list)
-    committed: List[str] = field(default_factory=list)
+    status: list[str] = field(default_factory=list)
+    committed: list[str] = field(default_factory=list)
     update: bool = False
     vpn_activated: bool = False
 
@@ -94,7 +93,7 @@ class Repo:
                         print("cleaned")
 
             else:
-                commit_info = self.committed[0].replace("[", "\[").replace("## ", "")
+                commit_info = self.committed[0].replace("[", r"\[").replace("## ", "")
                 if cli.confirm(f"Push ({commit_info}) ?", default=True):
                     self.run("push")
 
@@ -109,7 +108,7 @@ class Repo:
             cli.run(pre_commit_file, cwd=self.path)
 
     @property
-    def changed_files(self) -> Dict[str, str]:
+    def changed_files(self) -> dict[str, str]:
         return {
             filenames[-1]: symbol
             for line in self.status
